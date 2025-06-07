@@ -4,3 +4,20 @@
   padding: 2rem;
   text-align: center;
 }
+
+.custom-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+.custom-scroll {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}

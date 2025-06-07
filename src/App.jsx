@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './components/ui/button';
 import { Card } from './components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,7 +9,6 @@ export default function CacheVisualizerApp() {
   const [isConfigured, setIsConfigured] = useState(false);
   const [cacheType, setCacheType] = useState('Direct Mapped');
 
-  // Add controlled states for form inputs:
   const [cacheSize, setCacheSize] = useState('');
   const [blockSize, setBlockSize] = useState('');
   const [writePolicyHit, setWritePolicyHit] = useState('WRITE-THROUGH');
@@ -17,13 +16,27 @@ export default function CacheVisualizerApp() {
   const [associativity, setAssociativity] = useState('');
   const [replacementPolicy, setReplacementPolicy] = useState('RANDOM');
 
-  // Hold config to pass to CacheBox
   const [cacheConfig, setCacheConfig] = useState(null);
+
+  useEffect(() => {
+    if(cacheType === 'Direct Mapped') {
+      setAssociativity('1');
+    } 
+    else if(cacheType === 'Fully Associative') {
+      const size = Number(cacheSize);
+      const block = Number(blockSize);
+      if(size > 0 && block > 0) {
+        setAssociativity(Math.floor(size / block).toString());
+      } 
+      else {
+        setAssociativity('');
+      }
+    }
+  }, [cacheType, cacheSize, blockSize]);
 
   const handleCacheSelect = () => setShowConfig(true);
 
   const handleSubmitConfig = async () => {
-    // Construct config object
     const config = {
       cacheType,
       cacheSize: Number(cacheSize),
@@ -34,31 +47,15 @@ export default function CacheVisualizerApp() {
       replacementPolicy,
     };
 
-    // Call API to configure cache (simulate with a delay here)
-    try {
-      // Replace this with your real API call
-      const response = await fakeApiConfigureCache(config);
-
-      // Save API response or config to state
-      setCacheConfig(response);
-      setIsConfigured(true);
-    } catch (err) {
-      alert('Failed to configure cache: ' + err.message);
-    }
+    setCacheConfig(config);
+    setIsConfigured(true);
   };
 
-  // Fake API function for demo - replace with actual API call
-  async function fakeApiConfigureCache(config) {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(config), 1000);
-    });
-  }
-
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 custom-scroll scrollbar-hide overflow-y-auto">
       <nav className="bg-blue-600 text-white p-4 text-xl font-semibold shadow">Cache Visualizer</nav>
 
-      <main className="p-10 container mx-auto relative overflow-hidden min-h-[600px]">
+      <main className="p-10 container mx-auto relative overflow-y-auto min-h-[600px]">
         <AnimatePresence mode="wait">
           {!isConfigured ? (
             <motion.div
@@ -153,6 +150,7 @@ export default function CacheVisualizerApp() {
                           value={associativity}
                           onChange={(e) => setAssociativity(e.target.value)}
                           className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          disabled={cacheType !== 'Set Associative'}
                         />
                       </div>
                       <div>
@@ -182,7 +180,7 @@ export default function CacheVisualizerApp() {
                     <Button
                       className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md"
                       onClick={handleSubmitConfig}
-                      disabled={!cacheSize || !blockSize || !associativity} // simple validation
+                      disabled={!cacheSize || !blockSize || (cacheType === 'Set Associative' && !associativity)}
                     >
                       Start Simulation
                     </Button>
@@ -191,7 +189,7 @@ export default function CacheVisualizerApp() {
               </Card>
             </motion.div>
           ) : (
-            <CacheBox config={cacheConfig} />
+            <CacheBox cacheConfig={cacheConfig} />
           )}
         </AnimatePresence>
       </main>
