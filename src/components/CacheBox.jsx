@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import axios from 'axios'; // Make sure axios is imported
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 
-const memoryData = [
+const initialMemoryData = [
   [18, 52, 86, 120],
   [154, 188, 222, 240],
   [17, 34, 51, 68],
@@ -17,11 +17,13 @@ const memoryData = [
 
 export default function CacheBox({ cacheConfig }) {
   const [cacheData, setCacheData] = useState([]);
+  const [mainMemory, setMainMemory] = useState(initialMemoryData);
   const [address, setAddress] = useState('');
   const [operation, setOperation] = useState('read');
   const [data, setData] = useState('0');
   const [log, setLog] = useState([]);
   const [lastAccessed, setLastAccessed] = useState(null);
+  const [updatedRow, setUpdatedRow] = useState(null);
 
   const totalBlocks = Math.floor(cacheConfig.cacheSize / cacheConfig.blockSize);
   const associativity = cacheConfig.associativity || 1;
@@ -42,34 +44,75 @@ export default function CacheBox({ cacheConfig }) {
   }
 
   const stateColors = {
-    Invalid : 'bg-red-200 text-gray-500',
-    MissPending : 'bg-yellow-200 text-yellow-800',
-    Valid : 'bg-green-200 text-green-800',
-    Modified : 'bg-orange-200 text-red-800',
+    Invalid: 'bg-red-200 text-gray-500',
+    MissPending: 'bg-yellow-200 text-yellow-800',
+    Valid: 'bg-green-200 text-green-800',
+    Modified: 'bg-orange-200 text-red-800',
   };
 
   const handleRequest = async () => {
     try {
-      const res = await axios.post('/api/cache/request', {
-        address,
-        operation,
-        data: operation === 'write' ? data : undefined,
+      const response = await axios.post('http://localhost:5000/cache/request', {
+        address: parseInt(address, 10),
+        type: operation,
+        data: parseInt(data, 10),
       });
-      setCacheData(res.data.cache);
-      setLastAccessed(res.data.accessedBlock);
-      setLog((prev) => [
+
+      const {
+        cacheFinal,
+        memoryIndex,
+        memoryData,
+        type,
+        index,
+        tag,
+        offset,
+        block,
+        data: responseData,
+        hit,
+        oldState,
+        newState,
+      } = response.data;
+
+      setCacheData(cacheFinal);
+      setLastAccessed(block);
+      setUpdatedRow(memoryIndex);
+
+      // Update only the changed memory row
+      setMainMemory(prev => {
+        const updated = [...prev];
+        if (memoryIndex >= 0 && memoryIndex < updated.length) {
+          updated[memoryIndex] = memoryData;
+        }
+        return updated;
+      });
+
+      setTimeout(() => setUpdatedRow(null), 1000);
+
+      if (type === 'read') {
+        alert(`Data at address ${address}: ${responseData}`);
+      } else {
+        alert(`Wrote ${data} to address ${address}`);
+      }
+
+      setLog(prev => [
         ...prev,
         {
           address,
           operation,
-          hit: res.data.hit,
-          accessedBlock: res.data.accessedBlock,
+          hit,
+          accessedBlock: block,
+          tag,
+          index,
+          data: responseData,
+          transition: `${oldState} → ${newState}`,
         },
       ]);
     } catch (err) {
-      console.error('Error sending request:', err);
+      console.error('Error in API request:', err);
+      alert('Error: Could not reach backend or invalid response.');
     }
   };
+
 
   useEffect(() => {
     if (operation === 'read') setData('');
@@ -104,9 +147,8 @@ export default function CacheBox({ cacheConfig }) {
                         initial={{ scale: 0.95, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 0.2 }}
-                        className={`rounded-xl shadow border p-2 flex flex-col transition-transform duration-200 ease-in-out ${
-                          isAccessed ? 'ring-2 ring-blue-600 scale-105' : ''
-                        }`}
+                        className={`rounded-xl shadow border p-2 flex flex-col transition-transform duration-200 ease-in-out ${isAccessed ? 'ring-2 ring-blue-600 scale-105' : ''
+                          }`}
                         style={{ flex: 1, minWidth: 0, maxWidth: `${100 / associativity}%` }}
                       >
                         <div className={`text-center font-medium border-b py-1 rounded-t ${stateColor}`}>
@@ -167,9 +209,8 @@ export default function CacheBox({ cacheConfig }) {
               {log.map((entry, i) => (
                 <div
                   key={i}
-                  className={`border-b py-1 ${
-                    entry.hit ? 'text-green-600' : 'text-red-600'
-                  }`}
+                  className={`border-b py-1 ${entry.hit ? 'text-green-600' : 'text-red-600'
+                    }`}
                 >
                   {entry.operation.toUpperCase()} {entry.address} →{' '}
                   {entry.hit ? 'Hit' : 'Miss'} (Block {entry.accessedBlock})
@@ -181,8 +222,8 @@ export default function CacheBox({ cacheConfig }) {
           <Card className="p-4 flex-1">
             <h3 className="text-lg font-semibold mb-2 text-gray-800">Main Memory</h3>
             <div className="flex flex-col gap-1 text-sm">
-              {memoryData.map((row, i) => (
-                <div key={i} className="flex gap-1 items-center">
+              {mainMemory.map((row, i) => (
+                <div key={i} className={`flex gap-1 items-center ${updatedRow === i ? 'bg-yellow-100' : ''}`}>
                   <div className="w-14 font-medium text-gray-700">Addr {i}</div>
                   {row.map((val, j) => (
                     <div
