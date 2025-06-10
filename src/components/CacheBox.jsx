@@ -16,32 +16,27 @@ const initialMemoryData = [
 ];
 
 export default function CacheBox({ cacheConfig }) {
-  const [cacheData, setCacheData] = useState([]);
-  const [mainMemory, setMainMemory] = useState(initialMemoryData);
   const [address, setAddress] = useState('');
-  const [operation, setOperation] = useState('read');
+  const [operation, setOperation] = useState('READ');
   const [data, setData] = useState('0');
   const [log, setLog] = useState([]);
   const [lastAccessed, setLastAccessed] = useState(null);
   const [updatedRow, setUpdatedRow] = useState(null);
-
+  
   const totalBlocks = Math.floor(cacheConfig.cacheSize / cacheConfig.blockSize);
   const associativity = cacheConfig.associativity || 1;
   const totalLines = Math.ceil(totalBlocks / associativity);
-
-  const blocksToRender =
-    cacheData.length > 0
-      ? cacheData
-      : Array.from({ length: totalBlocks }, () => ({
-          tag: '-',
-          state: 'Invalid',
-          data: ['-', '-', '-', '-'],
-        }));
-
-  const cacheLines = [];
-  for (let i = 0; i < totalLines; i++) {
-    cacheLines.push(blocksToRender.slice(i * associativity, (i + 1) * associativity));
-  }
+  
+  const [cacheData, setCacheData] = useState(
+    Array.from({ length: totalLines }, () =>
+      Array.from({ length: associativity }, () => ({
+        tag: '-',
+        state: 'Invalid',
+        data: Array(cacheConfig.blockSize / 4).fill('-'),
+      }))
+    )
+  );
+  const [mainMemory, setMainMemory] = useState(cacheConfig.mainMemory);
 
   const stateColors = {
     Invalid: 'bg-red-200 text-gray-500',
@@ -52,11 +47,13 @@ export default function CacheBox({ cacheConfig }) {
 
   const handleRequest = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/cache/request', {
+      const response = await axios.post('http://localhost:8080/api/cache/request', {
         address: parseInt(address, 10),
-        type: operation,
-        data: parseInt(data, 10),
+        action: operation,
+        data: [parseInt(data, 10)],
       });
+
+      console.log(response);
 
       const {
         cacheFinal,
@@ -73,7 +70,25 @@ export default function CacheBox({ cacheConfig }) {
         newState,
       } = response.data;
 
-      setCacheData(cacheFinal);
+      const way = 0;
+
+      hit && setCacheData(prev => {
+        const updated = prev.map(row => [...row]);
+        if (
+          index >= 0 &&
+          index < updated.length &&
+          way >= 0 &&
+          way < updated[index].length
+        ) {
+          updated[index][way] = {
+            tag,
+            state: newState,
+            data: cacheFinal,
+          };
+        }
+        return updated;
+      });
+
       setLastAccessed(block);
       setUpdatedRow(memoryIndex);
 
@@ -88,7 +103,7 @@ export default function CacheBox({ cacheConfig }) {
 
       setTimeout(() => setUpdatedRow(null), 1000);
 
-      if (type === 'read') {
+      if (type === 'READ') {
         alert(`Data at address ${address}: ${responseData}`);
       } else {
         alert(`Wrote ${data} to address ${address}`);
@@ -115,14 +130,14 @@ export default function CacheBox({ cacheConfig }) {
 
 
   useEffect(() => {
-    if (operation === 'read') setData('');
+    if (operation === 'READ') setData('');
     else setData('0');
   }, [operation]);
 
   return (
     <motion.div
       key="sim"
-      className="absolute w-full h-full left-0 right-0 overflow-hidden"
+      className="absolute w-full h-full left-0 right-0 overflow-y-auto"
       initial={{ x: '100%', opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: '100%', opacity: 0 }}
@@ -130,13 +145,14 @@ export default function CacheBox({ cacheConfig }) {
     >
       <div className="flex w-full h-full">
         {/* Cache Panel */}
-        <div className="w-[65%] h-full px-4 py-3">
+        <div className="w-[65%] h-full px-4 py-3 overflow-y-auto">
           <Card className="p-4 h-full flex flex-col gap-4">
             <h3 className="text-lg font-semibold text-gray-800">Cache Blocks</h3>
             <div className="flex flex-col gap-4">
-              {cacheLines.map((lineBlocks, lineIndex) => (
+              {cacheData.map((lineBlocks, lineIndex) => (
                 <div key={lineIndex} className="flex gap-3 w-full">
                   {lineBlocks.map((block, i) => {
+                    // console.log(block);
                     const blockIndex = lineIndex * associativity + i;
                     const isAccessed = blockIndex === lastAccessed;
                     const stateColor = stateColors[block.state] || 'bg-gray-200';
@@ -158,7 +174,7 @@ export default function CacheBox({ cacheConfig }) {
                           {block.tag}
                         </div>
                         <div className="grid grid-cols-4 gap-1 pt-2">
-                          {block.data.map((val, idx) => (
+                          {block?.data?.map((val, idx) => (
                             <div
                               key={idx}
                               className="text-center border rounded px-1 py-0.5 bg-white text-sm truncate"
@@ -177,7 +193,7 @@ export default function CacheBox({ cacheConfig }) {
         </div>
 
         {/* Request and Memory Panel */}
-        <div className="w-[35%] h-full pr-4 py-3 flex flex-col gap-4">
+        <div className="w-[35%] h-full pr-4 py-3 flex flex-col gap-4 overflow-y-auto">
           <Card className="p-4">
             <h3 className="text-lg font-semibold mb-2 text-gray-800">Send Request</h3>
             <div className="flex flex-col gap-2">
@@ -192,7 +208,7 @@ export default function CacheBox({ cacheConfig }) {
                 onChange={(e) => setOperation(e.target.value)}
                 className="border px-2 py-2 rounded focus:outline-none focus:ring"
               >
-                <option value="read">Read</option>
+                <option value="READ">Read</option>
                 <option value="write">Write</option>
               </select>
               {operation === 'write' && (
@@ -219,7 +235,7 @@ export default function CacheBox({ cacheConfig }) {
             </div>
           </Card>
 
-          <Card className="p-4 flex-1">
+          <Card className="p-4 flex-1 overflow-y-auto">
             <h3 className="text-lg font-semibold mb-2 text-gray-800">Main Memory</h3>
             <div className="flex flex-col gap-1 text-sm">
               {mainMemory.map((row, i) => (

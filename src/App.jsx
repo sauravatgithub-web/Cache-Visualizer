@@ -3,6 +3,7 @@ import { Button } from './components/ui/button';
 import { Card } from './components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import CacheBox from './components/CacheBox';
+import axios from 'axios';
 
 export default function CacheVisualizerApp() {
   const [showConfig, setShowConfig] = useState(false);
@@ -38,17 +39,46 @@ export default function CacheVisualizerApp() {
 
   const handleSubmitConfig = async () => {
     const config = {
-      cacheType,
+      cacheType: (cacheType === 'Direct Mapped') ? 'DIRECT' : (cacheType === 'Fully Associative') ? 'ASSOCIATIVE' : 'SET-ASSOCIATIVE',
       cacheSize: Number(cacheSize),
       blockSize: Number(blockSize),
       writePolicyHit,
       writePolicyMiss,
-      associativity: Number(associativity),
+      ways: Number(associativity),
       replacementPolicy,
     };
 
-    setCacheConfig(config);
-    setIsConfigured(true);
+    try {
+      console.log(config);
+      const response = await axios.post('http://localhost:8080/api/cache/configure', config);
+
+      console.log('Config submitted successfully:', response.data);
+
+      const { message, mainMemory } = response.data;
+
+      // Chunk the mainMemory array into sub-arrays of 4 elements each
+      const chunkedMemory = [];
+      for (let i = 0; i < mainMemory.length; i += 4) {
+        chunkedMemory.push(mainMemory.slice(i, i + 4));
+      }
+
+      // Now pass it to setCacheConfig or use as needed
+      setCacheConfig({ 
+        message, 
+        mainMemory: chunkedMemory,
+        cacheSize: cacheSize,
+        blockSize: blockSize,
+        associativity: associativity,
+        writePolicyOnHit: writePolicyHit,
+        writePolicyOnMiss: writePolicyMiss,
+        replacementPolicy: replacementPolicy
+      });
+      setIsConfigured(true);
+    } 
+    catch (error) {
+      console.error('Error submitting config:', error);
+      alert('Failed to submit cache configuration. Please check server logs.');
+    }
   };
 
   return (
@@ -100,7 +130,7 @@ export default function CacheVisualizerApp() {
                   >
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-gray-700 font-semibold mb-1">Cache Size (blocks)</label>
+                        <label className="block text-gray-700 font-semibold mb-1">Cache Size (bytes)</label>
                         <input
                           type="number"
                           value={cacheSize}
