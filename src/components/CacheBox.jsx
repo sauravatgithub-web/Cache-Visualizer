@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import ReconnectingWebSocket from 'reconnecting-websocket';
 import { motion } from 'framer-motion';
 import axios from 'axios'; // Make sure axios is imported
 import { Button } from './ui/button';
@@ -39,10 +40,10 @@ export default function CacheBox({ cacheConfig }) {
   const [mainMemory, setMainMemory] = useState(cacheConfig.mainMemory);
 
   const stateColors = {
-    Invalid: 'bg-red-200 text-gray-500',
-    MissPending: 'bg-yellow-200 text-yellow-800',
-    Valid: 'bg-green-200 text-green-800',
-    Modified: 'bg-orange-200 text-red-800',
+    INVALID: 'bg-red-200 text-gray-500',
+    MISS_PENDING: 'bg-yellow-200 text-yellow-800',
+    VALID: 'bg-green-200 text-green-800',
+    MODIFIED: 'bg-orange-200 text-red-800',
   };
 
   const handleRequest = async () => {
@@ -72,7 +73,7 @@ export default function CacheBox({ cacheConfig }) {
 
       const way = 0;
 
-      hit && setCacheData(prev => {
+      setCacheData(prev => {
         const updated = prev.map(row => [...row]);
         if (
           index >= 0 &&
@@ -93,13 +94,13 @@ export default function CacheBox({ cacheConfig }) {
       setUpdatedRow(memoryIndex);
 
       // Update only the changed memory row
-      setMainMemory(prev => {
-        const updated = [...prev];
-        if (memoryIndex >= 0 && memoryIndex < updated.length) {
-          updated[memoryIndex] = memoryData;
-        }
-        return updated;
-      });
+      // setMainMemory(prev => {
+      //   const updated = [...prev];
+      //   if (memoryIndex >= 0 && memoryIndex < updated.length) {
+      //     updated[memoryIndex] = memoryData;
+      //   }
+      //   return updated;
+      // });
 
       setTimeout(() => setUpdatedRow(null), 1000);
 
@@ -128,6 +129,46 @@ export default function CacheBox({ cacheConfig }) {
     }
   };
 
+   useEffect(() => {
+      const socket = new ReconnectingWebSocket('ws://localhost:8080/ws/cache');
+
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log('Received from backend:', data);
+
+        const way = 0;
+
+        data.type === "READ" && setCacheData(prev => {
+          const updated = prev.map(row => [...row]);
+          if (
+            data.index >= 0 &&
+            data.index < updated.length &&
+            way >= 0 &&
+            way < updated[data.index].length
+          ) {
+            updated[data.index][way] = {
+              tag: data.tag,
+              state: data.newState,
+              data: data.cacheFinal,
+            };
+          }
+          return updated;
+        });
+
+        setUpdatedRow(data.memoryIndex);
+
+        // Update only the changed memory row
+        setMainMemory(prev => {
+          const updated = [...prev];
+          if (data.memoryIndex >= 0 && data.memoryIndex < updated.length) {
+            updated[data.memoryIndex / 16] = data.memoryData;
+          }
+          return updated;
+        });
+      };
+
+      return () => socket.close();
+    }, []);
 
   useEffect(() => {
     if (operation === 'READ') setData('');

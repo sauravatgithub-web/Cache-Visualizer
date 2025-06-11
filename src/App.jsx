@@ -12,8 +12,8 @@ export default function CacheVisualizerApp() {
 
   const [cacheSize, setCacheSize] = useState('');
   const [blockSize, setBlockSize] = useState('');
-  const [writePolicyHit, setWritePolicyHit] = useState('WRITE-THROUGH');
-  const [writePolicyMiss, setWritePolicyMiss] = useState('WRITE-ALLOCATE');
+  const [writePolicyOnHit, setWritePolicyOnHit] = useState('WRITE-THROUGH');
+  const [writePolicyOnMiss, setWritePolicyOnMiss] = useState('WRITE-ALLOCATE');
   const [associativity, setAssociativity] = useState('');
   const [replacementPolicy, setReplacementPolicy] = useState('RANDOM');
 
@@ -42,8 +42,8 @@ export default function CacheVisualizerApp() {
       cacheType: (cacheType === 'Direct Mapped') ? 'DIRECT' : (cacheType === 'Fully Associative') ? 'ASSOCIATIVE' : 'SET-ASSOCIATIVE',
       cacheSize: Number(cacheSize),
       blockSize: Number(blockSize),
-      writePolicyHit,
-      writePolicyMiss,
+      writePolicyOnHit,
+      writePolicyOnMiss,
       ways: Number(associativity),
       replacementPolicy,
     };
@@ -69,8 +69,8 @@ export default function CacheVisualizerApp() {
         cacheSize: cacheSize,
         blockSize: blockSize,
         associativity: associativity,
-        writePolicyOnHit: writePolicyHit,
-        writePolicyOnMiss: writePolicyMiss,
+        writePolicyOnHit: writePolicyOnHit,
+        writePolicyOnMiss: writePolicyOnMiss,
         replacementPolicy: replacementPolicy
       });
       setIsConfigured(true);
@@ -152,8 +152,8 @@ export default function CacheVisualizerApp() {
                       <div>
                         <label className="block text-gray-700 font-semibold mb-1">Write Policy (Hit)</label>
                         <select
-                          value={writePolicyHit}
-                          onChange={(e) => setWritePolicyHit(e.target.value)}
+                          value={writePolicyOnHit}
+                          onChange={(e) => setWritePolicyOnHit(e.target.value)}
                           className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="WRITE-THROUGH">Write-Through</option>
@@ -163,8 +163,8 @@ export default function CacheVisualizerApp() {
                       <div>
                         <label className="block text-gray-700 font-semibold mb-1">Write Policy (Miss)</label>
                         <select
-                          value={writePolicyMiss}
-                          onChange={(e) => setWritePolicyMiss(e.target.value)}
+                          value={writePolicyOnMiss}
+                          onChange={(e) => setWritePolicyOnMiss(e.target.value)}
                           className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="WRITE-ALLOCATE">Write Allocate</option>
