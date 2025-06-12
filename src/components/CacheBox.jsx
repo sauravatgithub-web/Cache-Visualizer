@@ -93,15 +93,6 @@ export default function CacheBox({ cacheConfig }) {
       setLastAccessed(block);
       setUpdatedRow(memoryIndex);
 
-      // Update only the changed memory row
-      // setMainMemory(prev => {
-      //   const updated = [...prev];
-      //   if (memoryIndex >= 0 && memoryIndex < updated.length) {
-      //     updated[memoryIndex] = memoryData;
-      //   }
-      //   return updated;
-      // });
-
       setTimeout(() => setUpdatedRow(null), 1000);
 
       if (type === 'READ') {
@@ -161,7 +152,9 @@ export default function CacheBox({ cacheConfig }) {
         setMainMemory(prev => {
           const updated = [...prev];
           if (data.memoryIndex >= 0 && data.memoryIndex < updated.length) {
-            updated[data.memoryIndex / 16] = data.memoryData;
+            const row = Math.floor(data.memoryIndex / 4);
+            const col = data.memoryIndex % 4;
+            updated[row][col] = data.memoryData[0];
           }
           return updated;
         });
