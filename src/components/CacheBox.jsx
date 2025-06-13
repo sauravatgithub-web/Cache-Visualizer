@@ -32,7 +32,7 @@ export default function CacheBox({ cacheConfig }) {
     Array.from({ length: totalLines }, () =>
       Array.from({ length: associativity }, () => ({
         tag: '-',
-        state: 'Invalid',
+        state: 'INVALID',
         data: Array(cacheConfig.blockSize / 4).fill('-'),
       }))
     )
@@ -71,22 +71,32 @@ export default function CacheBox({ cacheConfig }) {
         newState,
       } = response.data;
 
-      const way = 0;
-
       setCacheData(prev => {
         const updated = prev.map(row => [...row]);
-        if (
-          index >= 0 &&
-          index < updated.length &&
-          way >= 0 &&
-          way < updated[index].length
-        ) {
-          updated[index][way] = {
-            tag,
-            state: newState,
-            data: cacheFinal,
-          };
+        let way = 0;
+        if (!hit && oldState === "INVALID") {
+          for (let i = 0; i < cacheConfig.associativity; i++) {
+            if (updated[index][i].state === "INVALID") {
+              way = i;
+              break;
+            }
+          }
         }
+        if(hit && oldState === "VALID") {
+          for (let i = 0; i < cacheConfig.associativity; i++) {
+            if (updated[index][i].tag === tag) {
+              way = i;
+              break;
+            }
+          }
+        }
+
+        updated[index][way] = {
+          tag: tag,
+          state: newState,
+          data: cacheFinal,
+        };
+
         return updated;
       });
 
@@ -127,26 +137,28 @@ export default function CacheBox({ cacheConfig }) {
         const data = JSON.parse(event.data);
         console.log('Received from backend:', data);
 
-        const way = 0;
-
         data.type === "READ" && setCacheData(prev => {
           const updated = prev.map(row => [...row]);
-          if (
-            data.index >= 0 &&
-            data.index < updated.length &&
-            way >= 0 &&
-            way < updated[data.index].length
-          ) {
-            updated[data.index][way] = {
-              tag: data.tag,
-              state: data.newState,
-              data: data.cacheFinal,
-            };
+          let way = 0;
+          if (data.oldState === "MISS_PENDING") {
+            for (let i = 0; i < cacheConfig.associativity; i++) {
+              if (updated[data.index][i].state === "MISS_PENDING") {
+                way = i;
+                break;
+              }
+            }
           }
+
+          updated[data.index][way] = {
+            tag: data.tag,
+            state: data.newState,
+            data: data.cacheFinal,
+          };
+
           return updated;
         });
 
-        setUpdatedRow(data.memoryIndex);
+        setUpdatedRow(data.memoryIndex / 4);
 
         // Update only the changed memory row
         setMainMemory(prev => {
