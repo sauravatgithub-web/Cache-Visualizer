@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from './components/ui/button';
 import { Card } from './components/ui/card';
+import CacheConfigDialog from './components/dialogs/CacheConfigDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import CacheBox from './components/CacheBox';
 import axios from 'axios';
@@ -9,6 +10,7 @@ export default function CacheVisualizerApp() {
   const [showConfig, setShowConfig] = useState(false);
   const [isConfigured, setIsConfigured] = useState(false);
   const [cacheType, setCacheType] = useState('Direct Mapped');
+  const [showDialog, setShowDialog] = useState(false);
 
   const [cacheSize, setCacheSize] = useState('');
   const [blockSize, setBlockSize] = useState('');
@@ -71,7 +73,8 @@ export default function CacheVisualizerApp() {
         associativity: associativity,
         writePolicyOnHit: writePolicyOnHit,
         writePolicyOnMiss: writePolicyOnMiss,
-        replacementPolicy: replacementPolicy
+        replacementPolicy: replacementPolicy,
+        cacheType: cacheType
       });
       setIsConfigured(true);
     } 
@@ -83,7 +86,17 @@ export default function CacheVisualizerApp() {
 
   return (
     <div className="min-h-screen bg-gray-100 custom-scroll scrollbar-hide overflow-y-auto">
-      <nav className="bg-blue-600 text-white p-4 text-xl font-semibold shadow">Cache Visualizer</nav>
+      <nav className="bg-blue-600 text-white p-4 text-xl font-semibold shadow flex justify-between items-center">
+        <span>Cache Visualizer</span>
+        {isConfigured && (
+          <button
+            onClick={() => setShowDialog(true)}
+            className="text-white bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-md text-sm"
+          >
+            Configuration
+          </button>
+        )}
+      </nav>
 
       <main className="p-10 container mx-auto relative overflow-y-auto min-h-[600px]">
         <AnimatePresence mode="wait">
@@ -222,6 +235,9 @@ export default function CacheVisualizerApp() {
             <CacheBox cacheConfig={cacheConfig} />
           )}
         </AnimatePresence>
+        {showDialog && (
+          <CacheConfigDialog config={cacheConfig} onClose={() => setShowDialog(false)} />
+        )}
       </main>
     </div>
   );
