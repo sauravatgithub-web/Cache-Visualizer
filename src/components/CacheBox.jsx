@@ -94,7 +94,7 @@ export default function CacheBox({ cacheConfig }) {
         updated[index][way] = {
           tag: tag,
           state: newState,
-          data: cacheFinal,
+          data: (newState === "INVALID") ? Array(cacheConfig.blockSize / 4).fill('-') : cacheFinal,
         };
 
         return updated;
@@ -137,7 +137,7 @@ export default function CacheBox({ cacheConfig }) {
         const data = JSON.parse(event.data);
         console.log('Received from backend:', data);
 
-        data.type === "READ" && setCacheData(prev => {
+        setCacheData(prev => {
           const updated = prev.map(row => [...row]);
           let way = 0;
           if (data.oldState === "MISS_PENDING") {
@@ -147,13 +147,13 @@ export default function CacheBox({ cacheConfig }) {
                 break;
               }
             }
-          }
 
-          updated[data.index][way] = {
-            tag: data.tag,
-            state: data.newState,
-            data: data.cacheFinal,
-          };
+            updated[data.index][way] = {
+              tag: data.tag,
+              state: data.newState,
+              data: data.cacheFinal,
+            };
+          }
 
           return updated;
         });
