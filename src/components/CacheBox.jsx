@@ -63,6 +63,7 @@ export default function CacheBox({ cacheConfig }) {
         type,
         index,
         tag,
+        removedTag,
         offset,
         block,
         data: responseData,
@@ -70,6 +71,21 @@ export default function CacheBox({ cacheConfig }) {
         oldState,
         newState,
       } = response.data;
+
+      if(removedTag !== -1) {
+        setCacheData(prev => {
+          const updated = prev.map(row => [...row]);
+          const idx = updated[index].findIndex(block => block.tag === removedTag);
+          updated[index][idx] = {
+            tag: '-',
+            state: "INVALID",
+            data: Array(cacheConfig.blockSize / 4).fill('-'),
+          }
+          return updated;
+        });
+      }
+
+      setTimeout(() => {}, 3000);
 
       setCacheData(prev => {
         const updated = prev.map(row => [...row]);
@@ -100,7 +116,7 @@ export default function CacheBox({ cacheConfig }) {
         return updated;
       });
 
-      setLastAccessed(block);
+      setLastAccessed(cacheData[index].findIndex((block) => block.tag === tag));
       setUpdatedRow(memoryIndex);
 
       setTimeout(() => setUpdatedRow(null), 1000);
