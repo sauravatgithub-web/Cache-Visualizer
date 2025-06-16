@@ -16,11 +16,10 @@ const initialMemoryData = [
   [78, 95, 106, 123],
 ];
 
-export default function CacheBox({ cacheConfig }) {
+export default function CacheBox({ cacheConfig, setLog }) {
   const [address, setAddress] = useState('');
   const [operation, setOperation] = useState('READ');
   const [data, setData] = useState('0');
-  const [log, setLog] = useState([]);
   const [lastAccessed, setLastAccessed] = useState(null);
   const [updatedRow, setUpdatedRow] = useState(null);
   
@@ -282,18 +281,6 @@ export default function CacheBox({ cacheConfig }) {
                 />
               )}
               <Button onClick={handleRequest}>Submit</Button>
-            </div>
-            <div className="mt-4 text-sm text-gray-700">
-              {log.map((entry, i) => (
-                <div
-                  key={i}
-                  className={`border-b py-1 ${entry.hit ? 'text-green-600' : 'text-red-600'
-                    }`}
-                >
-                  {entry.operation.toUpperCase()} {entry.address} →{' '}
-                  {entry.hit ? 'Hit' : 'Miss'} (Block {entry.accessedBlock})
-                </div>
-              ))}
             </div>
           </Card>
 

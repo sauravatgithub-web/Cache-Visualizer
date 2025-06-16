@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Button } from './components/ui/button';
-import { Card } from './components/ui/card';
-import CacheConfigDialog from './components/dialogs/CacheConfigDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import CacheBox from './components/CacheBox';
 import axios from 'axios';
+
+import { Button } from './components/ui/button';
+import { Card } from './components/ui/card';
+import CacheConfigDialog from './components/dialogs/CacheConfigDialog';
+import LogPanel from './components/dialogs/LogPanelDialog';
 
 export default function CacheVisualizerApp() {
   const [showConfig, setShowConfig] = useState(false);
   const [isConfigured, setIsConfigured] = useState(false);
   const [cacheType, setCacheType] = useState('Direct Mapped');
   const [showDialog, setShowDialog] = useState(false);
+  const [showLog, setShowLog] = useState(false);
+  const [log, setLog] = useState([]);
 
   const [cacheSize, setCacheSize] = useState('');
   const [blockSize, setBlockSize] = useState('');
@@ -89,12 +93,20 @@ export default function CacheVisualizerApp() {
       <nav className="bg-blue-600 text-white p-4 text-xl font-semibold shadow flex justify-between items-center">
         <span>Cache Visualizer</span>
         {isConfigured && (
-          <button
-            onClick={() => setShowDialog(true)}
-            className="text-white bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-md text-sm"
-          >
-            Configuration
-          </button>
+          <div className="flex gap-x-2"> 
+            <button
+              onClick={() => setShowLog(true)}
+              className="text-white bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-md text-sm"
+            >
+              Show Logs
+            </button>
+            <button
+              onClick={() => setShowDialog(true)}
+              className="text-white bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-md text-sm"
+            >
+              Configuration
+            </button>
+          </div>
         )}
       </nav>
 
@@ -232,11 +244,14 @@ export default function CacheVisualizerApp() {
               </Card>
             </motion.div>
           ) : (
-            <CacheBox cacheConfig={cacheConfig} />
+            <CacheBox cacheConfig={cacheConfig} setLog={setLog} />
           )}
         </AnimatePresence>
         {showDialog && (
           <CacheConfigDialog config={cacheConfig} onClose={() => setShowDialog(false)} />
+        )}
+        {showLog && (
+          <LogPanel show={showLog} setShow={setShowLog} log={log} onClose={() => setShowLog(false)} />
         )}
       </main>
     </div>
