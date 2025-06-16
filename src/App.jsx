@@ -8,6 +8,7 @@ import { Card } from './components/ui/card';
 import CacheConfigDialog from './components/dialogs/CacheConfigDialog';
 import LogPanel from './components/dialogs/LogPanelDialog';
 
+
 export default function CacheVisualizerApp() {
   const [showConfig, setShowConfig] = useState(false);
   const [isConfigured, setIsConfigured] = useState(false);
@@ -26,15 +27,15 @@ export default function CacheVisualizerApp() {
   const [cacheConfig, setCacheConfig] = useState(null);
 
   useEffect(() => {
-    if(cacheType === 'Direct Mapped') {
+    if (cacheType === 'Direct Mapped') {
       setAssociativity('1');
-    } 
-    else if(cacheType === 'Fully Associative') {
+    }
+    else if (cacheType === 'Fully Associative') {
       const size = Number(cacheSize);
       const block = Number(blockSize);
-      if(size > 0 && block > 0) {
+      if (size > 0 && block > 0) {
         setAssociativity(Math.floor(size / block).toString());
-      } 
+      }
       else {
         setAssociativity('');
       }
@@ -69,8 +70,8 @@ export default function CacheVisualizerApp() {
       }
 
       // Now pass it to setCacheConfig or use as needed
-      setCacheConfig({ 
-        message, 
+      setCacheConfig({
+        message,
         mainMemory: chunkedMemory,
         cacheSize: cacheSize,
         blockSize: blockSize,
@@ -81,7 +82,7 @@ export default function CacheVisualizerApp() {
         cacheType: cacheType
       });
       setIsConfigured(true);
-    } 
+    }
     catch (error) {
       console.error('Error submitting config:', error);
       alert('Failed to submit cache configuration. Please check server logs.');
@@ -93,7 +94,7 @@ export default function CacheVisualizerApp() {
       <nav className="bg-blue-600 text-white p-4 text-xl font-semibold shadow flex justify-between items-center">
         <span>Cache Visualizer</span>
         {isConfigured && (
-          <div className="flex gap-x-2"> 
+          <div className="flex gap-x-2">
             <button
               onClick={() => setShowLog(true)}
               className="text-white bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-md text-sm"

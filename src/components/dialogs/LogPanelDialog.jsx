@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '../ui/button';
 
+
 export default function LogPanel({ show, setShow, log }) {
     const panelRef = useRef();
 

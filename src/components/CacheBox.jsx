@@ -5,21 +5,12 @@ import axios from 'axios'; // Make sure axios is imported
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 
-const initialMemoryData = [
-  [18, 52, 86, 120],
-  [154, 188, 222, 240],
-  [17, 34, 51, 68],
-  [85, 102, 119, 136],
-  [153, 170, 187, 204],
-  [221, 238, 255, 0],
-  [10, 27, 44, 61],
-  [78, 95, 106, 123],
-];
 
 export default function CacheBox({ cacheConfig, setLog }) {
   const [address, setAddress] = useState('');
   const [operation, setOperation] = useState('READ');
   const [data, setData] = useState('0');
+  const [accessedIndex, setAccessedIndex] = useState(null);
   const [lastAccessed, setLastAccessed] = useState(null);
   const [updatedRow, setUpdatedRow] = useState(null);
   
@@ -115,16 +106,19 @@ export default function CacheBox({ cacheConfig, setLog }) {
         return updated;
       });
 
-      setLastAccessed(cacheData[index].findIndex((block) => block.tag === tag));
+      setAccessedIndex(index);
+      setLastAccessed(
+        cacheConfig.cacheType === 'Direct Mapped'
+          ? 0
+          : cacheData[index].findIndex((block) => block.tag === tag)
+      );
+
       setUpdatedRow(memoryIndex);
 
       setTimeout(() => setUpdatedRow(null), 1000);
 
-      if (type === 'READ') {
-        alert(`Data at address ${address}: ${responseData}`);
-      } else {
-        alert(`Wrote ${data} to address ${address}`);
-      }
+      if(type === 'READ') alert(`Data at address ${address}: ${responseData}`);
+      else alert(`Wrote ${data} to address ${address}`);
 
       setLog(prev => [
         ...prev,
@@ -215,7 +209,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
                   {lineBlocks.map((block, i) => {
                     // console.log(block);
                     const blockIndex = lineIndex * associativity + i;
-                    const isAccessed = blockIndex === lastAccessed;
+                    const isAccessed = lineIndex === accessedIndex && i === lastAccessed;
                     const stateColor = stateColors[block.state] || 'bg-gray-200';
                     return (
                       <motion.div
