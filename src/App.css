@@ -5,19 +5,25 @@
   text-align: center;
 }
 
-.custom-scroll::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-.custom-scroll {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
+svg {
+  border: 1px solid #ccc;
+  margin: 0 auto;
+  display: block;
 }
 
-.scrollbar-hide {
-  scrollbar-width: none; /* Firefox */
+.highlight {
+  stroke: #ffa500 !important;
+  stroke-width: 4 !important;
+  filter: drop-shadow(0 0 5px #e04af0);
 }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
+.highlight-node {
+  stroke: #6ef6e870;
+  /* stroke-width: 4 !important; */
+  filter: drop-shadow(0 0 5px #ee6bf5);
+}
+
+.highlight-label {
+  fill: #e04af0 !important;
+  filter: drop-shadow(0 0 5px #e04af0);
 }

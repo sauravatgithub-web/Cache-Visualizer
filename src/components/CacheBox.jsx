@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { motion } from 'framer-motion';
-import axios from 'axios'; // Make sure axios is imported
+import axios from 'axios'; 
+
 import { Button } from './ui/button';
 import { Card } from './ui/card';
+import CacheFSM from './CacheFSM';
+import { cacheMaps } from '../assets/cacheStates';
+import { inputLabels } from '../assets/cacheStates';
 
 
 export default function CacheBox({ cacheConfig, setLog }) {
@@ -13,11 +17,15 @@ export default function CacheBox({ cacheConfig, setLog }) {
   const [accessedIndex, setAccessedIndex] = useState(null);
   const [lastAccessed, setLastAccessed] = useState(null);
   const [updatedRow, setUpdatedRow] = useState(null);
-  
+
   const totalBlocks = Math.floor(cacheConfig.cacheSize / cacheConfig.blockSize);
   const associativity = cacheConfig.associativity || 1;
   const totalLines = Math.ceil(totalBlocks / associativity);
-  
+
+  const [path, setPath] = useState();
+  const [label, setLabel] = useState();
+  const [showFSM, setShowFSM] = useState(false);
+
   const [cacheData, setCacheData] = useState(
     Array.from({ length: totalLines }, () =>
       Array.from({ length: associativity }, () => ({
@@ -62,7 +70,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
         newState,
       } = response.data;
 
-      if(removedTag !== -1) {
+      if (removedTag !== -1) {
         setCacheData(prev => {
           const updated = prev.map(row => [...row]);
           const idx = updated[index].findIndex(block => block.tag === removedTag);
@@ -75,7 +83,19 @@ export default function CacheBox({ cacheConfig, setLog }) {
         });
       }
 
-      setTimeout(() => {}, 3000);
+      setTimeout(() => { }, 3000);
+
+      const inputLabel = (type == "READ") ? inputLabels[2] : inputLabels[1];
+      setPath([cacheMaps[oldState], cacheMaps[newState]]);
+      setLabel(inputLabel);
+
+      setShowFSM(true);
+      setTimeout(() => setShowFSM(false), 4000); // auto-close after 2s
+
+      // setTimeout(() => {
+      //   setPath(null);
+      //   setLabel(null);
+      // }, 4000); // Clear highlight after 1.5 seconds
 
       setCacheData(prev => {
         const updated = prev.map(row => [...row]);
@@ -88,7 +108,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
             }
           }
         }
-        if(hit && oldState === "VALID") {
+        if (hit && oldState === "VALID") {
           for (let i = 0; i < cacheConfig.associativity; i++) {
             if (updated[index][i].tag === tag) {
               way = i;
@@ -117,7 +137,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
 
       setTimeout(() => setUpdatedRow(null), 1000);
 
-      if(type === 'READ') alert(`Data at address ${address}: ${responseData}`);
+      if (type === 'READ') alert(`Data at address ${address}: ${responseData}`);
       else alert(`Wrote ${data} to address ${address}`);
 
       setLog(prev => [
@@ -139,50 +159,65 @@ export default function CacheBox({ cacheConfig, setLog }) {
     }
   };
 
-   useEffect(() => {
-      const socket = new ReconnectingWebSocket('ws://localhost:8080/ws/cache');
+  useEffect(() => {
+    const socket = new ReconnectingWebSocket('ws://localhost:8080/ws/cache');
 
-      socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        console.log('Received from backend:', data);
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Received from backend:', data);
 
-        setCacheData(prev => {
-          const updated = prev.map(row => [...row]);
-          let way = 0;
-          if (data.oldState === "MISS_PENDING") {
-            for (let i = 0; i < cacheConfig.associativity; i++) {
-              if (updated[data.index][i].state === "MISS_PENDING") {
-                way = i;
-                break;
-              }
+      setCacheData(prev => {
+        const updated = prev.map(row => [...row]);
+        let way = 0;
+        if (data.oldState === "MISS_PENDING") {
+          for (let i = 0; i < cacheConfig.associativity; i++) {
+            if (updated[data.index][i].state === "MISS_PENDING") {
+              way = i;
+              break;
             }
-
-            updated[data.index][way] = {
-              tag: data.tag,
-              state: data.newState,
-              data: data.cacheFinal,
-            };
           }
 
-          return updated;
-        });
+          updated[data.index][way] = {
+            tag: data.tag,
+            state: data.newState,
+            data: data.cacheFinal,
+          };
+        }
 
-        setUpdatedRow(data.memoryIndex / 4);
+        return updated;
+      });
 
-        // Update only the changed memory row
-        setMainMemory(prev => {
-          const updated = [...prev];
-          if (data.memoryIndex >= 0 && data.memoryIndex < updated.length) {
-            const row = Math.floor(data.memoryIndex / 4);
-            const col = data.memoryIndex % 4;
-            updated[row][col] = data.memoryData[0];
-          }
-          return updated;
-        });
-      };
+      setUpdatedRow(data.memoryIndex / 4);
 
-      return () => socket.close();
-    }, []);
+      // Update only the changed memory row
+      setMainMemory(prev => {
+        const updated = [...prev];
+        if (data.memoryIndex >= 0 && data.memoryIndex < updated.length) {
+          const row = Math.floor(data.memoryIndex / 4);
+          const col = data.memoryIndex % 4;
+          updated[row][col] = data.memoryData[0];
+        }
+        return updated;
+      });
+
+      setLog(prev => [
+        ...prev,
+        {
+          address: data.memoryIndex * 4,
+          operation: data.type,
+          hit: data.hit,
+          accessedBlock: data.block,
+          tag: data.tag,
+          index: data.index,
+          data: data.data,
+          transition: `${data.oldState} → ${data.newState}`,
+        },
+      ]);
+
+    };
+
+    return () => socket.close();
+  }, []);
 
   useEffect(() => {
     if (operation === 'READ') setData('');
@@ -249,6 +284,23 @@ export default function CacheBox({ cacheConfig, setLog }) {
 
         {/* Request and Memory Panel */}
         <div className="w-[35%] h-full pr-4 py-3 flex flex-col gap-4 overflow-y-auto">
+          {showFSM && (
+            <motion.div
+              className="absolute left-0 right-0 z-50 mx-auto w-[90%] md:w-[75%] lg:w-[60%] px-4 -mt-2 mb-4"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="p-4 shadow-xl border-2 border-blue-300">
+                <h4 className="text-md font-semibold text-gray-700 mb-2">State Transition</h4>
+                <div className="overflow-x-auto">
+                  <CacheFSM path={path} label={label} />
+                </div>
+              </Card>
+            </motion.div>
+          )}
+
           <Card className="p-4">
             <h3 className="text-lg font-semibold mb-2 text-gray-800">Send Request</h3>
             <div className="flex flex-col gap-2">
