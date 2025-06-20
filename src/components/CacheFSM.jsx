@@ -203,37 +203,45 @@ const CacheFSM = ({ path, label }) => {
       for (let i = 0; i < pathStates.length - 1; i++) {
         const from = pathStates[i];
         const to = pathStates[i + 1];
-        // const key = `${from}->${to}`;
 
-        const match = links.find(
-          l => l.source.id === from && l.target.id === to && l.input === label
+        const allMatches = links.filter(
+          l => l.source.id === from && l.target.id === to && l.input.trim().toLowerCase() === label[i].trim().toLowerCase()
         );
-        console.log(match);
 
-        // let match = allMatches[0];
-        // if (allMatches.length > 1 && label[key] !== undefined) {
-        //   match = allMatches[label[key]];
-        // }
+        const match = allMatches[0];
 
-        // if(match) {
-        //   if(from === to) selfLink.filter(d => d === match).classed("highlight", true);
-        //   else link.filter(d => d === match).classed("highlight", true);
-
-        //   transitionLabels.filter(d => d === match).classed("highlight-label", true);
-        // }
         if (match) {
+          const matchFn = d =>
+            d.source.id === from &&
+            d.target.id === to &&
+            d.input.trim().toLowerCase() === label[i].trim().toLowerCase();
+
           if (from === to) {
-            console.log("Highlighting self-link", match);
-            selfLink.filter(d => d === match).classed("highlight", true);
+            selfLink
+              .filter(matchFn)
+              .attr("stroke", "#ffa500")
+              .attr("stroke-width", 4)
+              .attr("filter", "drop-shadow(0 0 5px #e04af0)");
           } else {
-            console.log("Highlighting normal link", match);
-            link.filter(d => d === match).classed("highlight", true);
+            link
+              .filter(matchFn)
+              .attr("stroke", "#ffa500")
+              .attr("stroke-width", 4)
+              .attr("filter", "drop-shadow(0 0 5px #e04af0)");
           }
 
-          transitionLabels.filter(d => d === match).classed("highlight-label", true);
-        }
+          transitionLabels
+            .filter(matchFn)
+            .attr("fill", "#e04af0")
+            .style("filter", "drop-shadow(0 0 5px #e04af0)")
+            .style("font-weight", "bold");
 
-        node.filter(d => d.id === from || d.id === to).classed("highlight-node", true);
+          node
+            .filter(d => d.id === from || d.id === to)
+            .attr("stroke", "#6ef6e870")
+            .attr("stroke-width", 4)
+            .attr("filter", "drop-shadow(0 0 5px #ee6bf5)");
+        }
       }
     }
 

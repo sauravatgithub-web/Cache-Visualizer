@@ -87,7 +87,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
 
       const inputLabel = (type == "READ") ? inputLabels[2] : inputLabels[1];
       setPath([cacheMaps[oldState], cacheMaps[newState]]);
-      setLabel(inputLabel);
+      setLabel([inputLabel]);
 
       setShowFSM(true);
       setTimeout(() => setShowFSM(false), 4000); // auto-close after 2s
