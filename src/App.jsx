@@ -7,6 +7,7 @@ import { Button } from './components/ui/button';
 import { Card } from './components/ui/card';
 import CacheConfigDialog from './components/dialogs/CacheConfigDialog';
 import LogPanel from './components/dialogs/LogPanelDialog';
+import CacheFSM from './components/dialogs/CacheFSMdialog';
 
 
 export default function CacheVisualizerApp() {
@@ -15,6 +16,7 @@ export default function CacheVisualizerApp() {
   const [cacheType, setCacheType] = useState('Direct Mapped');
   const [showDialog, setShowDialog] = useState(false);
   const [showLog, setShowLog] = useState(false);
+  const [showStateDiagram, setShowStateDiagram] = useState(false);
   const [log, setLog] = useState([]);
 
   const [cacheSize, setCacheSize] = useState('');
@@ -95,6 +97,12 @@ export default function CacheVisualizerApp() {
         <span>Cache Visualizer</span>
         {isConfigured && (
           <div className="flex gap-x-2">
+            <button
+              onClick={() => setShowStateDiagram(true)}
+              className="text-white bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-md text-sm"
+            >
+              State Diagram
+            </button>
             <button
               onClick={() => setShowLog(true)}
               className="text-white bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-md text-sm"
@@ -253,6 +261,9 @@ export default function CacheVisualizerApp() {
         )}
         {showLog && (
           <LogPanel show={showLog} setShow={setShowLog} log={log} onClose={() => setShowLog(false)} />
+        )}
+        {showStateDiagram && (
+          <CacheFSM onClose={() => setShowStateDiagram(false)} showTransitions={false}/>
         )}
       </main>
     </div>

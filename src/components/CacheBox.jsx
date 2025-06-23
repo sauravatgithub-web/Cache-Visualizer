@@ -5,7 +5,7 @@ import axios from 'axios';
 
 import { Button } from './ui/button';
 import { Card } from './ui/card';
-import CacheFSM from './CacheFSM';
+import CacheFSM from './dialogs/CacheFSMdialog';
 import { cacheMaps } from '../assets/cacheStates';
 import { inputLabels } from '../assets/cacheStates';
 
@@ -82,8 +82,6 @@ export default function CacheBox({ cacheConfig, setLog }) {
           return updated;
         });
       }
-
-      setTimeout(() => { }, 3000);
 
       const inputLabel = (type == "READ") ? inputLabels[2] : inputLabels[1];
       setPath([cacheMaps[oldState], cacheMaps[newState]]);
@@ -295,7 +293,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
               <Card className="p-4 shadow-xl border-2 border-blue-300">
                 <h4 className="text-md font-semibold text-gray-700 mb-2">State Transition</h4>
                 <div className="overflow-x-auto">
-                  <CacheFSM path={path} label={label} />
+                  <CacheFSM path={path} label={label} showTransitions={true} />
                 </div>
               </Card>
             </motion.div>
@@ -316,9 +314,9 @@ export default function CacheBox({ cacheConfig, setLog }) {
                 className="border px-2 py-2 rounded focus:outline-none focus:ring"
               >
                 <option value="READ">Read</option>
-                <option value="write">Write</option>
+                <option value="WRITE">Write</option>
               </select>
-              {operation === 'write' && (
+              {operation === 'WRITE' && (
                 <input
                   placeholder="Data to Write"
                   value={data}
