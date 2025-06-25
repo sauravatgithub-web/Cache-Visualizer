@@ -6,7 +6,16 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      borderRadius: {
+        md: '0.375rem',
+      },
+      boxShadow: {
+        sm: '0 1px 2px 0 rgba(0,0,0,0.05)',
+      },
+    },
   },
-  plugins: [scrollbarHide],
+  plugins: [
+    require('tailwind-scrollbar-hide')
+  ]
 }

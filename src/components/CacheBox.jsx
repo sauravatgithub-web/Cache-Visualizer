@@ -3,9 +3,10 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 import { motion } from 'framer-motion';
 import axios from 'axios'; 
 
-import { Button } from './ui/button';
 import { Card } from './ui/card';
 import CacheFSM from './dialogs/CacheFSMdialog';
+import RequestDialog from './dialogs/RequestDialog'; 
+
 import { cacheMaps } from '../assets/cacheStates';
 import { inputLabels } from '../assets/cacheStates';
 
@@ -25,6 +26,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
   const [path, setPath] = useState();
   const [label, setLabel] = useState();
   const [showFSM, setShowFSM] = useState(false);
+  const [showDrawer, setShowDrawer] = useState(false);
 
   const [cacheData, setCacheData] = useState(
     Array.from({ length: totalLines }, () =>
@@ -87,7 +89,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
       setPath([cacheMaps[oldState], cacheMaps[newState]]);
       setLabel([inputLabel]);
 
-      setShowFSM(true);
+      // setShowFSM(true);
       setTimeout(() => setShowFSM(false), 4000); // auto-close after 2s
 
       // setTimeout(() => {
@@ -225,22 +227,56 @@ export default function CacheBox({ cacheConfig, setLog }) {
   return (
     <motion.div
       key="sim"
-      className="absolute w-full h-full left-0 right-0 overflow-y-auto"
+      className="absolute w-full h-full left-0 right-0"
       initial={{ x: '100%', opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: '100%', opacity: 0 }}
       transition={{ duration: 0.5, ease: 'easeInOut' }}
     >
+      <button
+        onClick={() => setShowDrawer(true)}
+        className="fixed right-4 bottom-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 z-50"
+        title="Send Request"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 10l11 2-11 2v4l18-6L3 6v4z" />
+        </svg>
+      </button>
+
+      {/* Side Drawer */}
+      {showDrawer && (
+        <RequestDialog
+          show={showDrawer}
+          onClose={() => setShowDrawer(false)}
+          address={address}
+          setAddress={setAddress}
+          operation={operation}
+          setOperation={setOperation}
+          data={data}
+          setData={setData}
+          onSubmit={() => {
+            handleRequest();
+            setShowDrawer(false);
+          }}
+        />
+      )}
+
       <div className="flex w-full h-full">
         {/* Cache Panel */}
-        <div className="w-[65%] h-full px-4 py-3 overflow-y-auto">
+        <div className="w-[65%] h-full px-4 py-3">
           <Card className="p-4 h-full flex flex-col gap-4">
             <h3 className="text-lg font-semibold text-gray-800">Cache Blocks</h3>
             <div className="flex flex-col gap-4">
               {cacheData.map((lineBlocks, lineIndex) => (
                 <div key={lineIndex} className="flex gap-3 w-full">
                   {lineBlocks.map((block, i) => {
-                    // console.log(block);
                     const blockIndex = lineIndex * associativity + i;
                     const isAccessed = lineIndex === accessedIndex && i === lastAccessed;
                     const stateColor = stateColors[block.state] || 'bg-gray-200';
@@ -280,55 +316,26 @@ export default function CacheBox({ cacheConfig, setLog }) {
           </Card>
         </div>
 
-        {/* Request and Memory Panel */}
-        <div className="w-[35%] h-full pr-4 py-3 flex flex-col gap-4 overflow-y-auto">
-          {showFSM && (
-            <motion.div
-              className="absolute left-0 right-0 z-50 mx-auto w-[90%] md:w-[75%] lg:w-[60%] px-4 -mt-2 mb-4"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Card className="p-4 shadow-xl border-2 border-blue-300">
-                <h4 className="text-md font-semibold text-gray-700 mb-2">State Transition</h4>
-                <div className="overflow-x-auto">
-                  <CacheFSM path={path} label={label} showTransitions={true} />
-                </div>
-              </Card>
-            </motion.div>
-          )}
+        {/* State Machine and Memory Panel */}
+        <div className="w-[35%] h-full pr-4 py-3 flex flex-col gap-4">
+          <Card className="p-4 shadow-xl border-2 border-grey">
+            <h4 className="text-md font-semibold text-gray-700 mb-2">State Transition</h4>
 
-          <Card className="p-4">
-            <h3 className="text-lg font-semibold mb-2 text-gray-800">Send Request</h3>
-            <div className="flex flex-col gap-2">
-              <input
-                placeholder="Address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="border px-3 py-2 rounded w-full focus:outline-none focus:ring"
-              />
-              <select
-                value={operation}
-                onChange={(e) => setOperation(e.target.value)}
-                className="border px-2 py-2 rounded focus:outline-none focus:ring"
-              >
-                <option value="READ">Read</option>
-                <option value="WRITE">Write</option>
-              </select>
-              {operation === 'WRITE' && (
-                <input
-                  placeholder="Data to Write"
-                  value={data}
-                  onChange={(e) => setData(e.target.value)}
-                  className="border px-3 py-2 rounded w-full focus:outline-none focus:ring"
-                />
-              )}
-              <Button onClick={handleRequest}>Submit</Button>
+            <div className="overflow-x-auto cursor-pointer" onClick={() => setShowFSM(true)}>
+              <CacheFSM path={path} label={label} showTransitions={false} />
             </div>
           </Card>
 
-          <Card className="p-4 flex-1 overflow-y-auto">
+          {showFSM && (
+            <CacheFSM
+              path={path}
+              label={label}
+              showTransitions={false}
+              onClose={() => setShowFSM(false)}
+            />
+          )}
+
+          <Card className="p-4 flex-1">
             <h3 className="text-lg font-semibold mb-2 text-gray-800">Main Memory</h3>
             <div className="flex flex-col gap-1 text-sm">
               {mainMemory.map((row, i) => (

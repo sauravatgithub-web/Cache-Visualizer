@@ -6,6 +6,8 @@ const width = 800;
 
 const CacheFSM = ({ path, label, onClose, showTransitions }) => {
   const svgRef = useRef();
+  const isInline = !onClose;
+
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
@@ -251,36 +253,45 @@ const CacheFSM = ({ path, label, onClose, showTransitions }) => {
       const gElement = svgEl.querySelector("g.graph");
       if (gElement) {
         const bbox = gElement.getBBox();
-        svgEl.setAttribute("height", bbox.y + bbox.height + 20); // Add small padding
+        svgEl.setAttribute("viewBox", `0 0 ${width} ${bbox.y + bbox.height + 20}`);
       }
     }, 500);
 
     return () => simulation.stop();
   }, [path, label]);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative bg-white dark:bg-zinc-900 rounded-xl shadow-lg w-[90vw] max-w-[1000px] max-h-[90vh] overflow-auto p-6"
+  return isInline ? (
+  <div className="w-full max-h-[400px] overflow-auto rounded-md border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-2">
+    <svg
+      ref={svgRef}
+      className="w-full h-auto mx-auto block"
+      preserveAspectRatio="xMidYMid meet"
+    />
+  </div>
+) : (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="relative bg-white dark:bg-zinc-900 rounded-xl shadow-lg w-[90vw] max-w-[1000px] max-h-[90vh] overflow-auto p-6"
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-gray-500 hover:text-black dark:hover:text-white"
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-black dark:hover:text-white"
-        >
-          ✕
-        </button>
+        ✕
+      </button>
 
-        <h2 className="text-xl font-bold mb-1.5 text-center text-gray-800 dark:text-white">
-          Cache Finite State Machine
-        </h2>
+      <h2 className="text-xl font-bold mb-1.5 text-center text-gray-800 dark:text-white">
+        {!showTransitions ? "Cache Finite State Machine" : "Cache State Transition"}
+      </h2>
 
-        <div className="rounded-md border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-2 overflow-auto">
-          <svg ref={svgRef} width={width} className="mx-auto block" />
-        </div>
+      <div className="rounded-md border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-2 overflow-auto">
+        <svg ref={svgRef} width={width} className="mx-auto block" />
       </div>
     </div>
-  );
+  </div>
+);
+
 };
 
 export default CacheFSM;
