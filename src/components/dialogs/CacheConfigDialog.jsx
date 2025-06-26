@@ -26,6 +26,7 @@ export default function CacheConfigDialog({ config, onClose }) {
                         ['Cache Type', config.cacheType],
                         ['Cache Size', `${config.cacheSize} bytes`],
                         ['Block Size', `${config.blockSize} bytes`],
+                        ['Word Size', `${config.wordSize} bytes`],
                         ['Associativity (Ways)', config.associativity],
                         ['Write Policy (Hit)', config.writePolicyOnHit],
                         ['Write Policy (Miss)', config.writePolicyOnMiss],

@@ -7,6 +7,8 @@ import { Button } from './components/ui/button';
 import { Card } from './components/ui/card';
 import CacheConfigDialog from './components/dialogs/CacheConfigDialog';
 import LogPanel from './components/dialogs/LogPanelDialog';
+import { setTransitions } from './assets/cacheStates';
+import FlowDiagramDialog from './components/dialogs/FlowDiagramDialog';
 
 export default function CacheVisualizerApp() {
   const [showConfig, setShowConfig] = useState(false);
@@ -14,6 +16,7 @@ export default function CacheVisualizerApp() {
   const [cacheType, setCacheType] = useState('Direct Mapped');
   const [showDialog, setShowDialog] = useState(false);
   const [showLog, setShowLog] = useState(false);
+  const [showFlow, setShowFlow] = useState(false);
   const [log, setLog] = useState([]);
 
   const [cacheSize, setCacheSize] = useState('');
@@ -96,6 +99,7 @@ export default function CacheVisualizerApp() {
       for(let i = 0; i < mainMemory.length; i += 4) {
         chunkedMemory.push(mainMemory.slice(i, i + 4));
       }
+      setTransitions(writePolicyOnHit, writePolicyOnMiss);
 
       setCacheConfig({
         message,
@@ -123,6 +127,7 @@ export default function CacheVisualizerApp() {
         <span>Cache Visualizer</span>
         {isConfigured && (
           <div className="flex gap-x-2">
+            <button onClick={() => setShowFlow(true)} className="text-white bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-md text-sm">Show Flow Diagram</button>
             <button onClick={() => setShowLog(true)} className="text-white bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-md text-sm">Show Logs</button>
             <button onClick={() => setShowDialog(true)} className="text-white bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-md text-sm">Configuration</button>
           </div>
@@ -295,6 +300,7 @@ export default function CacheVisualizerApp() {
 
         {showDialog && <CacheConfigDialog config={cacheConfig} onClose={() => setShowDialog(false)} />}
         {showLog && <LogPanel show={showLog} setShow={setShowLog} log={log} onClose={() => setShowLog(false)} />}
+        {showFlow && <FlowDiagramDialog writePolicyOnHit={writePolicyOnHit} writePolicyOnMiss={writePolicyOnMiss} onClose={() => setShowFlow(false)} />}
       </main>
     </div>
   );
