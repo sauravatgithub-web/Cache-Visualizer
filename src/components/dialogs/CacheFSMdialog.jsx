@@ -125,7 +125,7 @@ const CacheFSM = ({ path, label, onClose, showTransitions }) => {
       .attr("class", "label")
       .attr("font-size", 13)
       .attr("text-anchor", "middle")
-      .attr("fill", "#333")
+      .attr("fill", "#7F00FF")
       .style("font-family", "Segoe UI, sans-serif")
       .text(d => d.label);
 

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios'; 
 
 import { Card } from './ui/card';
+import { Toast } from './ui/toast';
 import CacheFSM from './dialogs/CacheFSMdialog';
 import RequestDialog from './dialogs/RequestDialog'; 
 
@@ -18,6 +19,8 @@ export default function CacheBox({ cacheConfig, setLog }) {
   const [accessedIndex, setAccessedIndex] = useState(null);
   const [lastAccessed, setLastAccessed] = useState(null);
   const [updatedRow, setUpdatedRow] = useState(null);
+  const [showTransition, setShowTransition] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   const totalBlocks = Math.floor(cacheConfig.cacheSize / cacheConfig.blockSize);
   const associativity = cacheConfig.associativity || 1;
@@ -44,6 +47,15 @@ export default function CacheBox({ cacheConfig, setLog }) {
     MISS_PENDING: 'bg-yellow-200 text-yellow-800',
     VALID: 'bg-green-200 text-green-800',
     MODIFIED: 'bg-orange-200 text-red-800',
+  };
+
+  const triggerTransition = () => {
+    setShowTransition(true); 
+    setTimeout(() => {
+      setShowTransition(false); 
+      setPath(null);    // Clear FSM transition path
+      setLabel(null); 
+    }, 5000); 
   };
 
   const handleRequest = async () => {
@@ -88,9 +100,10 @@ export default function CacheBox({ cacheConfig, setLog }) {
       const inputLabel = (type == "READ") ? inputLabels[2] : inputLabels[1];
       setPath([cacheMaps[oldState], cacheMaps[newState]]);
       setLabel([inputLabel]);
+      triggerTransition();
 
       // setShowFSM(true);
-      setTimeout(() => setShowFSM(false), 4000); // auto-close after 2s
+      // setTimeout(() => setShowFSM(false), 4000); // auto-close after 2s
 
       // setTimeout(() => {
       //   setPath(null);
@@ -137,8 +150,8 @@ export default function CacheBox({ cacheConfig, setLog }) {
 
       setTimeout(() => setUpdatedRow(null), 1000);
 
-      if (type === 'READ') alert(`Data at address ${address}: ${responseData}`);
-      else alert(`Wrote ${data} to address ${address}`);
+      if (type === 'READ') setToastMessage(`Data at address ${address}: ${responseData}`);
+      else setToastMessage(`Wrote ${data} to address ${address}`);  
 
       setLog(prev => [
         ...prev,
@@ -187,6 +200,11 @@ export default function CacheBox({ cacheConfig, setLog }) {
         return updated;
       });
 
+      const inputLabel = (data.type == "READ") ? inputLabels[3] : inputLabels[4];
+      setPath([cacheMaps[data.oldState], cacheMaps[data.newState]]);
+      setLabel([inputLabel]);
+      triggerTransition();
+
       setUpdatedRow(data.memoryIndex / 4);
 
       // Update only the changed memory row
@@ -199,6 +217,9 @@ export default function CacheBox({ cacheConfig, setLog }) {
         }
         return updated;
       });
+
+      if (data.type === 'READ') setToastMessage(`Data at address ${address}: ${responseData}`);
+      else setToastMessage(`Wrote ${data} to address ${address}`);  
 
       setLog(prev => [
         ...prev,
@@ -322,7 +343,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
             <h4 className="text-md font-semibold text-gray-700 mb-2">State Transition</h4>
 
             <div className="overflow-x-auto cursor-pointer" onClick={() => setShowFSM(true)}>
-              <CacheFSM path={path} label={label} showTransitions={false} />
+              <CacheFSM path={path} label={label} showTransitions={showTransition} />
             </div>
           </Card>
 
@@ -355,6 +376,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
           </Card>
         </div>
       </div>
+      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage('')} />}
     </motion.div>
   );
 }

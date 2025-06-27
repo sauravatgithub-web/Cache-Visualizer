@@ -12,23 +12,11 @@ export const inputLabels = ["Invalidate", "CPUWr", "CPURd", "MemResp & wasRd", "
 export let transitions = [];
 
 export const setTransitions = (writePolicyOnHit, writePolicyOnMiss) => {
-  if(writePolicyOnHit == "WRITE-THROUGH" && writePolicyOnMiss == "WRITE-ALLOCATE") transitions = writeBackAllocate;
-  else if(writePolicyOnHit == "WRITE-THROUGH" && writePolicyOnMiss == "WRITE-NO-ALLOCATE") transitions = writeBackAllocate;
+  if(writePolicyOnHit == "WRITE-THROUGH" && writePolicyOnMiss == "WRITE-ALLOCATE") transitions = writeThroughAllocate;
+  else if(writePolicyOnHit == "WRITE-THROUGH" && writePolicyOnMiss == "WRITE-NO-ALLOCATE") transitions = writeThroughNoAllocate;
   else if(writePolicyOnHit == "WRITE-BACK" && writePolicyOnMiss == "WRITE-ALLOCATE") transitions = writeBackAllocate;
   else transitions = writeBackNoAllocate;
 }
-
-export const writeThrough = [
-  { from: "I", to: "I", label: "Invalidate / -", input: inputLabels[0] },
-  { from: "I", to: "I", label: "CPUWr / MemWr", input: inputLabels[1] },
-  { from: "I", to: "MP", label: "CPURd / MemRd", input: inputLabels[2] },
-  { from: "MP", to: "MP", label: "CPURd / Wait", input: inputLabels[2] },
-  { from: "MP", to: "MP", label: "CPUWr / Wait", input: inputLabels[1] },
-  { from: "MP", to: "V", label: "MemResp / CPUResp", input: inputLabels[5] },
-  { from: "V", to: "V", label: "CPUWr / MemWr", input: inputLabels[1] },
-  { from: "V", to: "V", label: "CPURd / CPUResp", input: inputLabels[2] },
-  { from: "V", to: "I", label: "Invalidate / -", input: inputLabels[0] }
-]
 
 export const writeBackNoAllocate = [
   { from: "I", to: "I", label: "Invalidate / -", input: inputLabels[0] },
