@@ -60,3 +60,29 @@ export const writeBackAllocate = [
   { from: "M", to: "M", label: "CPURd / CPUResp", input: inputLabels[2] },
   { from: "M", to: "I", label: "Invalidate / Write-back", input: inputLabels[0] },
 ]
+
+export const writeThroughNoAllocate = [
+  { from: "I", to: "I", label: "Invalidate / -", input: inputLabels[0] },
+  { from: "I", to: "I", label: "CPUWr / MemWr", input: inputLabels[1] },
+  { from: "I", to: "MP", label: "CPURd / MemRd", input: inputLabels[2] },
+  { from: "MP", to: "MP", label: "CPURd / Wait", input: inputLabels[2] },
+  { from: "MP", to: "MP", label: "CPUWr / Wait", input: inputLabels[1] },
+  { from: "MP", to: "V", label: "MemResp / CPUResp", input: inputLabels[5] },
+  { from: "V", to: "V", label: "CPUWr / MemWr", input: inputLabels[1] },
+  { from: "V", to: "V", label: "CPURd / CPUResp", input: inputLabels[2] },
+  { from: "V", to: "I", label: "Invalidate / -", input: inputLabels[0] }
+];
+
+
+export const writeThroughAllocate = [
+  { from: "I", to: "I", label: "Invalidate / -", input: inputLabels[0] },
+  { from: "I", to: "MP", label: "CPUWr / MemRd", input: inputLabels[1] },
+  { from: "I", to: "MP", label: "CPURd / MemRd", input: inputLabels[2] },
+  { from: "MP", to: "MP", label: "CPUWr / Wait", input: inputLabels[1] },
+  { from: "MP", to: "MP", label: "CPURd / Wait", input: inputLabels[2] },
+  { from: "MP", to: "V", label: "MemResp & wasRd / CPUResp", input: inputLabels[3] },
+  { from: "MP", to: "V", label: "MemResp & wasWr / -", input: inputLabels[4] },
+  { from: "V", to: "V", label: "CPUWr / MemWr", input: inputLabels[1] },
+  { from: "V", to: "V", label: "CPURd / CPUResp", input: inputLabels[2] },
+  { from: "V", to: "I", label: "Invalidate / -", input: inputLabels[0] }
+];
