@@ -20,7 +20,16 @@ const CacheFSM = ({ path, label, onClose, showTransitions }) => {
     const gNodes = gContainer.append("g").attr("class", "nodes");
     const gLabels = gContainer.append("g").attr("class", "labels");
 
-    const nodes = states.map(id => ({ id }));
+    const usedStateSet = new Set();
+    transitions.forEach(t => {
+      usedStateSet.add(t.from);
+      usedStateSet.add(t.to);
+    });
+
+    const nodes = states
+      .filter(id => usedStateSet.has(id))
+      .map(id => ({ id }));
+
     const nodeMap = Object.fromEntries(nodes.map(n => [n.id, n]));
 
     const rawLinks = transitions.map(t => ({

@@ -21,7 +21,7 @@ export default function CacheVisualizerApp() {
 
   const [cacheSize, setCacheSize] = useState('');
   const [blockSize, setBlockSize] = useState('');
-  const [wordSize, setWordSize] = useState(4);
+  const [wordSize, setWordSize] = useState('4');
   const [writePolicyOnHit, setWritePolicyOnHit] = useState('WRITE-THROUGH');
   const [writePolicyOnMiss, setWritePolicyOnMiss] = useState('WRITE-ALLOCATE');
   const [associativity, setAssociativity] = useState('');
@@ -60,7 +60,7 @@ export default function CacheVisualizerApp() {
     const numWordsInCache = C / W;
     const bitsForIndex = Math.floor(Math.log2(numBlocksInCache));
     const bitsInPhysAddr = Math.floor(Math.log2(64) + Math.log2(W));
-    const blocksInMem = M / B;
+    const blocksInMem = Number(M / B);
 
     return {
       wordSize: W,
@@ -96,8 +96,8 @@ export default function CacheVisualizerApp() {
       const { message, mainMemory } = response.data;
 
       const chunkedMemory = [];
-      for(let i = 0; i < mainMemory.length; i += 4) {
-        chunkedMemory.push(mainMemory.slice(i, i + 4));
+      for(let i = 0; i < mainMemory.length; i += (blockSize / wordSize)) {
+        chunkedMemory.push(mainMemory.slice(i, i + (blockSize / wordSize)));
       }
       setTransitions(writePolicyOnHit, writePolicyOnMiss);
 

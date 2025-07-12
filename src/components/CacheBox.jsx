@@ -31,12 +31,14 @@ export default function CacheBox({ cacheConfig, setLog }) {
   const [showFSM, setShowFSM] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
 
+  console.log(cacheConfig);
+
   const [cacheData, setCacheData] = useState(
     Array.from({ length: totalLines }, () =>
       Array.from({ length: associativity }, () => ({
         tag: '-',
         state: 'INVALID',
-        data: Array(cacheConfig.blockSize / 4).fill('-'),
+        data: Array(cacheConfig.blockSize / cacheConfig.wordSize).fill('-'),
       }))
     )
   );
@@ -150,8 +152,12 @@ export default function CacheBox({ cacheConfig, setLog }) {
 
       setTimeout(() => setUpdatedRow(null), 1000);
 
-      if (type === 'READ') setToastMessage(`Data at address ${address}: ${responseData}`);
-      else setToastMessage(`Wrote ${data} to address ${address}`);  
+      const message =
+        type === 'READ'
+          ? `Data at address ${address}: ${hit ? responseData : "NOT FOUND"}`
+          : `Wrote ${data} to address ${hit ? address : "NOT FOUND"}`;
+
+      setToastMessage(message);
 
       setLog(prev => [
         ...prev,
@@ -218,8 +224,8 @@ export default function CacheBox({ cacheConfig, setLog }) {
         return updated;
       });
 
-      if (data.type === 'READ') setToastMessage(`Data at address ${address}: ${responseData}`);
-      else setToastMessage(`Wrote ${data} to address ${address}`);  
+      // if (data.type === 'READ') setToastMessage(`Data at address ${data.address}:`, data.hit ? `${data.responseData}` : "NOT FOUND");
+      // else setToastMessage(`Wrote ${data.data} to address`, data.hit ? `${data.address}` : "NOT FOUND");  
 
       setLog(prev => [
         ...prev,
@@ -318,7 +324,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
                         <div className="text-center py-1 border-b text-sm text-gray-700">
                           {block.tag}
                         </div>
-                        <div className="grid grid-cols-4 gap-1 pt-2">
+                        <div className={`grid grid-cols-${block.data.length} gap-1 pt-2`}>
                           {block?.data?.map((val, idx) => (
                             <div
                               key={idx}
