@@ -19,6 +19,9 @@ export default function CacheVisualizerApp() {
   const [showFlow, setShowFlow] = useState(false);
   const [log, setLog] = useState([]);
 
+  const [inputCacheSize, setInputCacheSize] = useState('');
+  const [inputBlockSize, setInputBlockSize] = useState('');
+  const [inputWordSize, setInputWordSize] = useState('');
   const [cacheSize, setCacheSize] = useState('');
   const [blockSize, setBlockSize] = useState('');
   const [wordSize, setWordSize] = useState('4');
@@ -121,6 +124,12 @@ export default function CacheVisualizerApp() {
     }
   };
 
+  const toLowerPowerOfTwo = (num) => {
+    if (num <= 0) return '';
+    return 2 ** Math.floor(Math.log2(num));
+  };
+
+
   return (
     <div className="min-h-screen bg-gray-100 overflow-auto scrollbar-hide">
       <nav className="bg-blue-600 text-white p-4 text-xl font-semibold shadow flex justify-between items-center">
@@ -183,15 +192,66 @@ export default function CacheVisualizerApp() {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <label className="block text-gray-700 font-semibold mb-1">Cache Size (bytes)</label>
-                          <input type="number" value={cacheSize} onChange={(e) => setCacheSize(e.target.value)} className="w-full border rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500" />
+                          <input 
+                            type="number" 
+                            value={inputCacheSize} 
+                            onChange={(e) => setInputCacheSize(e.target.value)} 
+                            onBlur={() => {
+                              const val = Number(inputCacheSize);
+                              if(!val) {
+                                setCacheSize('');
+                                setInputCacheSize('');
+                              } 
+                              else {
+                                const corrected = toLowerPowerOfTwo(val).toString();
+                                setCacheSize(corrected);
+                                setInputCacheSize(corrected);
+                              }
+                            }}
+                            className="w-full border rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500" 
+                          />
                         </div>
                         <div>
                           <label className="block text-gray-700 font-semibold mb-1">Block Size (bytes)</label>
-                          <input type="number" value={blockSize} onChange={(e) => setBlockSize(e.target.value)} className="w-full border rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500" />
+                          <input 
+                            type="number" 
+                            value={inputBlockSize} 
+                            onChange={(e) => setInputBlockSize(e.target.value)} 
+                            onBlur={() => {
+                              const val = Number(inputBlockSize);
+                              if(!val) {
+                                setBlockSize('');
+                                setInputBlockSize('');
+                              } 
+                              else {
+                                const corrected = toLowerPowerOfTwo(val).toString();
+                                setBlockSize(corrected);
+                                setInputBlockSize(corrected);
+                              }
+                            }}
+                            className="w-full border rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                          />
                         </div>
                         <div>
                           <label className="block text-gray-700 font-semibold mb-1">Word Size (bytes)</label>
-                          <input type="number" value={wordSize} onChange={(e) => setWordSize(e.target.value)} className="w-full border rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500" />
+                          <input 
+                            type="number" 
+                            value={inputWordSize} 
+                            onChange={(e) => setInputWordSize(e.target.value)} 
+                            onBlur={() => {
+                              const val = Number(inputWordSize);
+                              if(!val) {
+                                setWordSize('');
+                                setInputWordSize('');
+                              } 
+                              else {
+                                const corrected = toLowerPowerOfTwo(val).toString();
+                                setWordSize(corrected);
+                                setInputWordSize(corrected);
+                              }
+                            }}
+                            className="w-full border rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500" 
+                          />
                         </div>
                       </div>
 

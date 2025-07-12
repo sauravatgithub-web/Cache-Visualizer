@@ -31,8 +31,6 @@ export default function CacheBox({ cacheConfig, setLog }) {
   const [showFSM, setShowFSM] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
 
-  console.log(cacheConfig);
-
   const [cacheData, setCacheData] = useState(
     Array.from({ length: totalLines }, () =>
       Array.from({ length: associativity }, () => ({
@@ -93,7 +91,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
           updated[index][idx] = {
             tag: '-',
             state: "INVALID",
-            data: Array(cacheConfig.blockSize / 4).fill('-'),
+            data: Array(cacheConfig.blockSize / cacheConfig.wordSize).fill('-'),
           }
           return updated;
         });
@@ -103,14 +101,6 @@ export default function CacheBox({ cacheConfig, setLog }) {
       setPath([cacheMaps[oldState], cacheMaps[newState]]);
       setLabel([inputLabel]);
       triggerTransition();
-
-      // setShowFSM(true);
-      // setTimeout(() => setShowFSM(false), 4000); // auto-close after 2s
-
-      // setTimeout(() => {
-      //   setPath(null);
-      //   setLabel(null);
-      // }, 4000); // Clear highlight after 1.5 seconds
 
       setCacheData(prev => {
         const updated = prev.map(row => [...row]);
@@ -135,7 +125,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
         updated[index][way] = {
           tag: tag,
           state: newState,
-          data: (newState === "INVALID") ? Array(cacheConfig.blockSize / 4).fill('-') : cacheFinal,
+          data: (newState === "INVALID") ? Array(cacheConfig.blockSize / cacheConfig.wordSize).fill('-') : cacheFinal,
         };
 
         return updated;
@@ -148,8 +138,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
           : cacheData[index].findIndex((block) => block.tag === tag)
       );
 
-      setUpdatedRow(memoryIndex);
-
+      setUpdatedRow(Math.floor(memoryIndex / (cacheConfig.blockSize / cacheConfig.wordSize)));
       setTimeout(() => setUpdatedRow(null), 1000);
 
       const message =
@@ -211,7 +200,8 @@ export default function CacheBox({ cacheConfig, setLog }) {
       setLabel([inputLabel]);
       triggerTransition();
 
-      setUpdatedRow(data.memoryIndex / 4);
+      setUpdatedRow(Math.floor(data.memoryIndex / (cacheConfig.blockSize / cacheConfig.wordSize)));
+      setTimeout(() => setUpdatedRow(null), 1000);
 
       // Update only the changed memory row
       setMainMemory(prev => {
@@ -223,9 +213,6 @@ export default function CacheBox({ cacheConfig, setLog }) {
         }
         return updated;
       });
-
-      // if (data.type === 'READ') setToastMessage(`Data at address ${data.address}:`, data.hit ? `${data.responseData}` : "NOT FOUND");
-      // else setToastMessage(`Wrote ${data.data} to address`, data.hit ? `${data.address}` : "NOT FOUND");  
 
       setLog(prev => [
         ...prev,
@@ -324,7 +311,10 @@ export default function CacheBox({ cacheConfig, setLog }) {
                         <div className="text-center py-1 border-b text-sm text-gray-700">
                           {block.tag}
                         </div>
-                        <div className={`grid grid-cols-${block.data.length} gap-1 pt-2`}>
+                        <div
+                          className="grid gap-1 pt-2"
+                          style={{ gridTemplateColumns: `repeat(${block.data.length}, minmax(0, 1fr))` }}
+                        >
                           {block?.data?.map((val, idx) => (
                             <div
                               key={idx}
@@ -366,7 +356,12 @@ export default function CacheBox({ cacheConfig, setLog }) {
             <h3 className="text-lg font-semibold mb-2 text-gray-800">Main Memory</h3>
             <div className="flex flex-col gap-1 text-sm">
               {mainMemory.map((row, i) => (
-                <div key={i} className={`flex gap-1 items-center ${updatedRow === i ? 'bg-yellow-100' : ''}`}>
+                <div
+                  key={i}
+                  className={`flex gap-1 items-center transition-all duration-300 rounded-md px-2 py-1
+                    ${updatedRow === i ? 'bg-yellow-50 border border-yellow-300 shadow-sm ring-2 ring-yellow-200' : ''}
+                  `}
+                >
                   <div className="w-14 font-medium text-gray-700">Addr {i}</div>
                   {row.map((val, j) => (
                     <div
