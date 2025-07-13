@@ -11,6 +11,8 @@ import RequestDialog from './dialogs/RequestDialog';
 import { cacheMaps } from '../assets/cacheStates';
 import { inputLabels } from '../assets/cacheStates';
 
+const server = import.meta.env.SERVER_BASE_URL;
+
 
 export default function CacheBox({ cacheConfig, setLog }) {
   const [address, setAddress] = useState('');
@@ -60,7 +62,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
 
   const handleRequest = async () => {
     try {
-      const response = await axios.post('http://localhost:8080/api/cache/request', {
+      const response = await axios.post(`${server}/api/cache/request`, {
         address: parseInt(address, 10),
         action: operation,
         data: [parseInt(data, 10)],

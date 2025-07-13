@@ -10,6 +10,9 @@ import LogPanel from './components/dialogs/LogPanelDialog';
 import { setTransitions } from './assets/cacheStates';
 import FlowDiagramDialog from './components/dialogs/FlowDiagramDialog';
 
+const server = import.meta.env.VITE_SERVER_BASE_URL;
+
+
 export default function CacheVisualizerApp() {
   const [showConfig, setShowConfig] = useState(false);
   const [isConfigured, setIsConfigured] = useState(false);
@@ -95,7 +98,7 @@ export default function CacheVisualizerApp() {
 
     try {
       // console.log(config);
-      const response = await axios.post('http://localhost:8080/api/cache/configure', config);
+      const response = await axios.post(`${server}/api/cache/configure`, config);
       const { message, mainMemory } = response.data;
 
       const chunkedMemory = [];
