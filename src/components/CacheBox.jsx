@@ -171,7 +171,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
   };
 
   useEffect(() => {
-    const socket = new ReconnectingWebSocket(`ws://${server_socket}/ws/cache`);
+    const socket = new ReconnectingWebSocket(`wss://${server_socket}/ws/cache`);
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
