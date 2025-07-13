@@ -44,7 +44,6 @@ This project helps in understanding the working of cache as in real CPU. It demo
 ## Project Structure
 
 ```
-
 backend/                     # Spring Boot application
      ├── controller/         # API endpoints
      ├── model/              # Core logic: cache, memory, block
