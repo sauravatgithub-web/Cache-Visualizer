@@ -8,10 +8,11 @@ import { Toast } from './ui/toast';
 import CacheFSM from './dialogs/CacheFSMdialog';
 import RequestDialog from './dialogs/RequestDialog'; 
 
-import { cacheMaps } from '../assets/cacheStates';
+import { cacheMaps } from '../assets/cacheStates'; 
 import { inputLabels } from '../assets/cacheStates';
 
-const server = import.meta.env.SERVER_BASE_URL;
+const server = import.meta.env.VITE_SERVER_BASE_URL;
+const server_socket = import.meta.env.VITE_RECONNECTING_URL;
 
 
 export default function CacheBox({ cacheConfig, setLog }) {
@@ -170,7 +171,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
   };
 
   useEffect(() => {
-    const socket = new ReconnectingWebSocket('ws://localhost:8080/ws/cache');
+    const socket = new ReconnectingWebSocket(`ws://${server_socket}/ws/cache`);
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
