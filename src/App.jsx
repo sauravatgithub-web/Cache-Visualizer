@@ -94,7 +94,7 @@ export default function CacheVisualizerApp() {
     };
 
     try {
-      console.log(config);
+      // console.log(config);
       const response = await axios.post('http://localhost:8080/api/cache/configure', config);
       const { message, mainMemory } = response.data;
 

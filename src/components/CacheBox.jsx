@@ -66,7 +66,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
         data: [parseInt(data, 10)],
       });
 
-      console.log(response);
+      // console.log(response);
 
       const {
         cacheFinal,
@@ -172,7 +172,7 @@ export default function CacheBox({ cacheConfig, setLog }) {
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log('Received from backend:', data);
+      // console.log('Received from backend:', data);
 
       setCacheData(prev => {
         const updated = prev.map(row => [...row]);
